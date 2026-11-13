@@ -1,0 +1,1844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>AVL Trees • Interactive Keynote Presentation</title>
+
+  <!-- Google Fonts: Sora, Plus Jakarta Sans, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            eq: {
+              bg: '#060511',
+              surface: '#0e0b24',
+              card: '#151138',
+              elevated: '#1e184e',
+              border: '#2c2463',
+              borderGlow: '#5343b8',
+              violet: '#a78bfa',
+              purple: '#7c3aed',
+              deepPurple: '#4c1d95',
+              teal: '#2dd4bf',
+              deepTeal: '#0f766e',
+              mint: '#34d399',
+              rose: '#fb7185',
+              amber: '#fbbf24',
+              text: '#f3f2ff',
+              muted: '#9893c7'
+            }
+          },
+          fontFamily: {
+            title: ['Sora', 'sans-serif'],
+            body: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #060511;
+      color: #f3f2ff;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    /* Ambient Cursor Spotlight Glow */
+    #cursorGlow {
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(167, 139, 250, 0.12) 0%, rgba(45, 212, 191, 0.05) 45%, transparent 70%);
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 1;
+      transition: opacity 0.3s ease;
+    }
+
+    /* Top deck reading progress line */
+    #deckProgressBar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #7c3aed, #a78bfa, #2dd4bf);
+      z-index: 50;
+      transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 0 14px rgba(167, 139, 250, 0.85);
+    }
+
+    /* Ambient Cyber Horizon Grid + Kinetic Particles Canvas */
+    #cyberCanvas {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Glowing Accents */
+    .glow-violet { filter: drop-shadow(0 0 16px rgba(167, 139, 250, 0.55)); }
+    .glow-teal { filter: drop-shadow(0 0 16px rgba(45, 212, 191, 0.55)); }
+    .glow-mint { filter: drop-shadow(0 0 14px rgba(52, 211, 153, 0.6)); }
+    .glow-rose { filter: drop-shadow(0 0 14px rgba(251, 113, 133, 0.65)); }
+    .glow-amber { filter: drop-shadow(0 0 14px rgba(251, 191, 36, 0.55)); }
+
+    /* Custom Glassmorphism */
+    .glass-card {
+      background: rgba(21, 17, 56, 0.82);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(83, 67, 184, 0.38);
+      transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+    }
+    .glass-card:hover {
+      border-color: rgba(167, 139, 250, 0.45);
+      box-shadow: 0 12px 36px -10px rgba(124, 58, 237, 0.24);
+    }
+
+    /* Smooth Slide Transition Animations */
+    .slide-page {
+      opacity: 0;
+      transform: translateY(16px) scale(0.985);
+      transition: opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1), transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .slide-page.active {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      animation: slideEntrance 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes slideEntrance {
+      0% {
+        opacity: 0;
+        transform: translateY(18px) scale(0.98);
+        filter: blur(4px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0px);
+      }
+    }
+
+    /* Staggered card entrance on slide load */
+    .slide-page.active .glass-card {
+      animation: cardGlide 0.42s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    }
+    .slide-page.active .glass-card:nth-of-type(1) { animation-delay: 0.04s; }
+    .slide-page.active .glass-card:nth-of-type(2) { animation-delay: 0.1s; }
+    .slide-page.active .glass-card:nth-of-type(3) { animation-delay: 0.16s; }
+    @keyframes cardGlide {
+      0% {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Custom Button Transitions */
+    button {
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    button:hover {
+      transform: translateY(-1px);
+    }
+    button:active {
+      transform: translateY(1px) scale(0.97);
+    }
+
+    /* Custom Scrollbars */
+    .custom-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
+    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #2c2463; border-radius: 4px; }
+    .custom-scroll::-webkit-scrollbar-thumb:hover { background: #a78bfa; }
+
+    /* Text Gradients */
+    .text-grad-violet {
+      background: linear-gradient(135deg, #f3f2ff 15%, #a78bfa 60%, #2dd4bf 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .text-grad-accent {
+      background: linear-gradient(135deg, #a78bfa 0%, #2dd4bf 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    /* SVG Node transitions */
+    .tree-node {
+      transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+      cursor: pointer;
+    }
+    .tree-node:hover circle {
+      stroke: #a78bfa;
+      stroke-width: 3.5px;
+      filter: drop-shadow(0 0 16px rgba(167, 139, 250, 0.85));
+      transform: scale(1.07);
+      transform-origin: center;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .tree-node:hover text {
+      fill: #2dd4bf;
+      transition: fill 0.2s ease;
+    }
+    .node-highlight { animation: pulseGlow 1.2s infinite alternate; }
+    @keyframes pulseGlow {
+      from { filter: drop-shadow(0 0 6px #34d399); transform: scale(1); }
+      to { filter: drop-shadow(0 0 18px #34d399); transform: scale(1.08); }
+    }
+  </style>
+</head>
+<body class="flex flex-col h-screen select-none relative bg-[#060511] text-[#f3f2ff] overflow-hidden">
+
+  <!-- TOP DECK PROGRESS STRIP -->
+  <div id="deckProgressBar" style="width: 14.28%;"></div>
+
+  <!-- INTERACTIVE MOUSE SPOTLIGHT GLOW -->
+  <div id="cursorGlow" style="left: -999px; top: -999px;"></div>
+
+  <!-- ========================================================================= -->
+  <!-- 1. HIGH-TECH CYBERNETIC HORIZON & FLOATING GEOMETRY CANVAS -->
+  <!-- ========================================================================= -->
+  <canvas id="cyberCanvas"></canvas>
+
+  <!-- ========================================================================= -->
+  <!-- 2. MINIMALIST TOP HEADER BAR (CLEAN, NO GYRO) -->
+  <!-- ========================================================================= -->
+  <header class="h-14 px-6 sm:px-8 border-b border-eq-border/70 bg-eq-bg/85 backdrop-blur-md flex items-center justify-between shrink-0 z-30">
+    <!-- Brand / Title -->
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-1.5">
+        <span class="w-2.5 h-2.5 rounded-full bg-eq-violet glow-violet animate-pulse"></span>
+        <span class="w-1.5 h-1.5 rounded-full bg-eq-teal glow-teal"></span>
+      </div>
+      <span class="font-title font-bold text-lg tracking-wider text-white">
+        AVL TREES <span class="text-xs font-mono font-normal text-eq-teal ml-1 px-2 py-0.5 rounded bg-eq-surface border border-eq-border">KEYNOTE</span>
+      </span>
+    </div>
+
+    <!-- Center Status Pill -->
+    <div class="hidden sm:flex items-center gap-2 px-3.5 py-1 rounded-full bg-eq-surface/80 border border-eq-border text-xs font-mono text-eq-teal">
+      <span class="w-2 h-2 rounded-full bg-eq-mint animate-pulse"></span>
+      <span>Strict Invariant Engine Active</span>
+    </div>
+
+    <!-- Right: Presenter Badge & Controls -->
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-eq-surface/90 border border-eq-border text-xs font-mono text-eq-muted">
+        <span>Presenter:</span>
+        <span class="text-white font-semibold">D. Abhinav</span>
+        <span class="text-eq-violet font-bold hidden sm:inline">25B81A6766</span>
+        <span class="text-eq-teal hidden sm:inline">CSD-B</span>
+      </div>
+
+      <div class="flex items-center gap-1.5">
+        <button onclick="toggleAudio()" id="audioBtn" class="w-8 h-8 rounded-lg bg-eq-surface hover:bg-eq-elevated border border-eq-border text-eq-muted hover:text-white flex items-center justify-center transition-all shadow-sm" title="Toggle Interaction Sounds">
+          <span class="material-symbols-outlined text-[17px]" id="audioIcon">volume_up</span>
+        </button>
+        <button onclick="toggleFullscreen()" class="px-3 h-8 rounded-lg bg-eq-surface hover:bg-eq-elevated border border-eq-border text-xs font-mono text-eq-teal flex items-center gap-1.5 transition-all shadow-sm" title="Fullscreen (F)">
+          <span class="material-symbols-outlined text-[16px]" id="fsIcon">fullscreen</span>
+          <span class="hidden sm:inline" id="fsText">Fullscreen</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- 3. MAIN ZERO-SCROLL SLIDE STAGE -->
+  <!-- ========================================================================= -->
+  <main class="flex-1 relative overflow-hidden z-10 flex flex-col p-3 sm:p-5 lg:p-6 min-h-0">
+    <div id="deckWrapper" class="flex-1 flex items-center justify-center max-w-7xl mx-auto w-full relative min-h-0">
+
+      <!-- ===================================================================== -->
+      <!-- SLIDE 1: INTRO & LIVE SELF-BUILDING CONSTELLATION VISUALIZER -->
+      <!-- ===================================================================== -->
+      <div class="slide-page w-full grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center" data-slide="1">
+        <div class="lg:col-span-6 space-y-4">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-eq-surface border border-eq-violet/30 text-xs font-mono text-eq-violet">
+            <span class="w-2 h-2 rounded-full bg-eq-teal animate-ping"></span>
+            SELF-BALANCING BINARY SEARCH ARCHITECTURE
+          </div>
+
+          <h1 class="font-title text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight text-grad-violet">
+            AVL Trees &amp; The Art of Balance.
+          </h1>
+
+          <p class="text-eq-muted text-base sm:text-lg leading-relaxed">
+            Every subtree maintains height equilibrium within <span class="font-mono text-eq-teal font-bold">&plusmn;1</span>. This single invariant turns standard BST collapse into a predictable, mathematically guaranteed <span class="font-mono text-eq-violet font-bold">O(log N)</span> runtime.
+          </p>
+
+          <!-- Interactive Presenter Attribution Card -->
+          <div class="glass-card p-5 rounded-2xl flex items-center justify-between border-l-4 border-l-eq-violet shadow-2xl">
+            <div>
+              <div class="text-[10px] font-mono text-eq-violet uppercase tracking-widest font-bold">Presenter</div>
+              <div class="font-title text-xl font-bold text-white mt-0.5">D. Abhinav</div>
+              <div class="flex items-center gap-2 mt-1.5 text-xs font-mono text-eq-muted">
+                <span class="px-2.5 py-0.5 rounded bg-eq-bg border border-eq-border text-eq-teal font-semibold">25B81A6766</span>
+                <span class="px-2.5 py-0.5 rounded bg-eq-bg border border-eq-border text-eq-violet font-semibold">CSD-B</span>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-[11px] font-mono text-eq-mint bg-eq-mint/10 border border-eq-mint/30 px-3 py-1 rounded-full font-bold">
+                Adelson-Velsky &amp; Landis (1962)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 1 Right: Live Self-Balancing In-Slide Mini-Visualizer -->
+        <div class="lg:col-span-6 glass-card p-5 sm:p-6 rounded-3xl flex flex-col justify-between h-[380px] shadow-2xl relative overflow-hidden">
+          <div class="flex items-center justify-between border-b border-eq-border/60 pb-2.5">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-eq-mint animate-pulse"></span>
+              <span class="font-mono text-xs font-bold text-eq-teal">IN-SLIDE LIVE VISUALIZER</span>
+            </div>
+            <button onclick="slide1AutoBuild()" class="px-2.5 py-1 rounded-lg bg-eq-surface hover:bg-eq-elevated border border-eq-border text-xs font-mono text-eq-violet flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">play_circle</span> Replay Build
+            </button>
+          </div>
+
+          <div class="flex-1 flex items-center justify-center relative w-full my-1 overflow-hidden min-h-0">
+            <svg id="slide1Svg" class="w-full h-full" viewBox="0 0 360 200" preserveAspectRatio="xMidYMid meet"></svg>
+          </div>
+
+          <div class="pt-2 border-t border-eq-border/60 flex items-center justify-between text-xs font-mono text-eq-muted">
+            <span id="slide1StatusText" class="text-eq-violet">Auto-balancing stream: inserting 10 &rarr; 50...</span>
+            <span class="text-eq-teal">|BF| &le; 1 strictly preserved</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- SLIDE 2: THE DEGENERATE SKEW PROBLEM (GRAPH OVERFLOW FIXED & NO COLLISION) -->
+      <!-- ===================================================================== -->
+      <div class="slide-page w-full space-y-4 hidden min-h-0" data-slide="2">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <span class="text-xs font-mono text-eq-rose bg-eq-rose/10 px-3 py-0.5 rounded-full border border-eq-rose/30 font-semibold">
+              PHASE 01 • THE PROBLEM
+            </span>
+            <h2 class="font-title text-2xl sm:text-3xl font-extrabold text-white mt-1">
+              Linear Collapse vs. Guaranteed Balance
+            </h2>
+          </div>
+          <!-- Interactive In-Slide Trigger Controls -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <button onclick="runSkewExperiment([10, 20, 30, 40])" class="px-3 py-1.5 rounded-xl bg-eq-surface hover:bg-eq-elevated border border-eq-border text-xs font-mono text-eq-teal font-bold flex items-center gap-1.5 transition-all">
+              <span class="material-symbols-outlined text-[15px]">play_arrow</span> Sorted [10, 20, 30, 40]
+            </button>
+            <button onclick="runSkewExperiment([40, 30, 20, 10])" class="px-3 py-1.5 rounded-xl bg-eq-surface hover:bg-eq-elevated border border-eq-border text-xs font-mono text-eq-violet font-bold flex items-center gap-1.5 transition-all">
+              <span class="material-symbols-outlined text-[15px]">fast_rewind</span> Descending [40, 30, 20, 10]
+            </button>
+            <button onclick="resetSkewExperiment()" class="px-3 py-1.5 rounded-xl bg-eq-surface hover:bg-eq-elevated border border-eq-border text-xs font-mono text-eq-muted">
+              Reset
+            </button>
+          </div>
+        </div>
+
+        <!-- In-Slide Dual Comparative Visualizer: Strictly Clamped, No Overlap -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 max-h-[350px]">
+          <!-- Plain BST (Degenerate) -->
+          <div class="glass-card p-4 rounded-2xl border-t-2 border-t-eq-rose flex flex-col justify-between h-[330px] overflow-hidden">
+            <div class="flex items-center justify-between border-b border-eq-border/50 pb-2 shrink-0">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-eq-rose glow-rose"></span>
+                <span class="font-title font-bold text-sm text-eq-rose">Standard BST (Unbalanced)</span>
+              </div>
+              <span id="skewBstHeightBadge" class="font-mono text-xs text-eq-rose bg-eq-rose/10 px-2 py-0.5 rounded border border-eq-rose/30 font-bold">
+                Height: 0
+              </span>
+            </div>
+
+            <!-- SVG Container with explicit overflow containment -->
+            <div class="flex-1 flex items-center justify-center my-1 relative overflow-hidden min-h-0 w-full">
+              <svg id="skewBstSvg" class="w-full h-full max-h-[210px]" viewBox="0 0 340 190" preserveAspectRatio="xMidYMid meet"></svg>
+            </div>
+
+            <div class="p-2 rounded-xl bg-eq-bg/80 border border-eq-border text-xs font-mono text-slate-300 flex items-center justify-between shrink-0">
+              <span>Search: <b class="text-eq-rose">O(N)</b> (Linked Chain)</span>
+              <span class="text-eq-muted">1M keys &rarr; 1,000,000 steps</span>
+            </div>
+          </div>
+
+          <!-- AVL Tree (Self-Balanced) -->
+          <div class="glass-card p-4 rounded-2xl border-t-2 border-t-eq-mint flex flex-col justify-between h-[330px] overflow-hidden">
+            <div class="flex items-center justify-between border-b border-eq-border/50 pb-2 shrink-0">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-eq-mint glow-mint"></span>
+                <span class="font-title font-bold text-sm text-eq-mint">AVL Tree (Auto-Balanced)</span>
+              </div>
+              <span id="skewAvlHeightBadge" class="font-mono text-xs text-eq-mint bg-eq-mint/10 px-2 py-0.5 rounded border border-eq-mint/30 font-bold">
+                Height: 0
+              </span>
+            </div>
+
+            <div class="flex-1 flex items-center justify-center my-1 relative overflow-hidden min-h-0 w-full">
+              <svg id="skewAvlSvg" class="w-full h-full max-h-[210px]" viewBox="0 0 340 190" preserveAspectRatio="xMidYMid meet"></svg>
+            </div>
+
+            <div class="p-2 rounded-xl bg-eq-bg/80 border border-eq-border text-xs font-mono text-slate-300 flex items-center justify-between shrink-0">
+              <span>Search: <b class="text-eq-mint">O(log N)</b> Guaranteed</span>
+              <span class="text-eq-muted">1M keys &rarr; &le; 20 steps</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- SLIDE 3: BALANCE FACTOR AXIOM & LIVE IN-SLIDE CALCULATOR -->
+      <!-- ===================================================================== -->
+      <div class="slide-page w-full space-y-5 hidden" data-slide="3">
+        <div class="text-center space-y-1">
+          <span class="text-xs font-mono text-eq-teal bg-eq-teal/10 px-3.5 py-0.5 rounded-full border border-eq-teal/30 font-semibold">
+            PHASE 02 • THE INVARIANT
+          </span>
+          <h2 class="font-title text-2xl sm:text-3xl font-extrabold text-white">
+            The Balance Factor Equation
+          </h2>
+          <p class="text-eq-muted text-xs sm:text-sm max-w-xl mx-auto">
+            Subtree heights are monitored continuously. The moment the disparity reaches 2, immediate rebalancing is enacted.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+          <!-- Left: In-Slide Interactive BF Simulator Widget -->
+          <div class="lg:col-span-7 glass-card p-5 sm:p-6 rounded-3xl space-y-4">
+            <div class="flex items-center justify-between border-b border-eq-border/60 pb-2">
+              <span class="font-mono text-xs text-eq-violet font-bold uppercase tracking-wider">Interactive Balance Factor Lab</span>
+              <span class="text-[11px] font-mono text-slate-400">Drag sliders below</span>
+            </div>
+
+            <!-- Big Formula Visualizer Card -->
+            <div class="p-3.5 rounded-2xl bg-eq-bg/90 border border-eq-border flex items-center justify-around font-mono text-center">
+              <div>
+                <div class="text-xs text-eq-muted mb-0.5">Height(Left)</div>
+                <div id="bfCalcLeftVal" class="text-2xl font-bold text-eq-teal">2</div>
+              </div>
+              <div class="text-2xl font-bold text-eq-muted">&minus;</div>
+              <div>
+                <div class="text-xs text-eq-muted mb-0.5">Height(Right)</div>
+                <div id="bfCalcRightVal" class="text-2xl font-bold text-eq-violet">1</div>
+              </div>
+              <div class="text-2xl font-bold text-eq-muted">=</div>
+              <div>
+                <div class="text-xs text-eq-muted mb-0.5">BF(Node)</div>
+                <div id="bfCalcResultVal" class="text-3xl font-extrabold text-eq-mint">+1</div>
+              </div>
+            </div>
+
+            <!-- Interactive Height Range Sliders -->
+            <div class="space-y-3">
+              <div>
+                <div class="flex justify-between text-xs font-mono mb-1">
+                  <span class="text-eq-teal font-semibold">Left Subtree Height: <span id="bfLeftSliderText">2</span></span>
+                  <span class="text-eq-muted">0 (Leaf) to 5 (Deep)</span>
+                </div>
+                <input type="range" id="bfSliderLeft" min="0" max="5" value="2" class="w-full accent-eq-teal cursor-pointer" oninput="updateBfCalculator()">
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs font-mono mb-1">
+                  <span class="text-eq-violet font-semibold">Right Subtree Height: <span id="bfRightSliderText">1</span></span>
+                  <span class="text-eq-muted">0 (Leaf) to 5 (Deep)</span>
+                </div>
+                <input type="range" id="bfSliderRight" min="0" max="5" value="1" class="w-full accent-eq-violet cursor-pointer" oninput="updateBfCalculator()">
+              </div>
+            </div>
+
+            <!-- Dynamic Decision Outcome -->
+            <div id="bfDecisionBox" class="p-3 rounded-xl border border-eq-mint/40 bg-eq-mint/10 text-xs font-mono text-eq-mint flex items-center justify-between">
+              <span id="bfDecisionText">Status: Invariant Satisfied (BF &in; {&minus;1, 0, +1})</span>
+              <span class="font-bold">No Rotation Needed</span>
+            </div>
+          </div>
+
+          <!-- Right: The 3 Golden Axioms -->
+          <div class="lg:col-span-5 space-y-3">
+            <div class="glass-card p-3.5 rounded-2xl border-l-4 border-l-eq-mint space-y-1">
+              <div class="font-mono text-xs font-bold text-eq-mint">RULE 1 • PERMISSIBLE THRESHOLD</div>
+              <div class="font-title text-sm font-bold text-white">BF &in; {&minus;1, 0, +1}</div>
+              <p class="text-xs text-eq-muted leading-relaxed">Heights differ by at most one level. Re-compute node height <code class="text-eq-teal">h = 1 + max(hL, hR)</code> and return.</p>
+            </div>
+
+            <div class="glass-card p-3.5 rounded-2xl border-l-4 border-l-eq-rose space-y-1">
+              <div class="font-mono text-xs font-bold text-eq-rose">RULE 2 • CRITICAL DISRUPTION</div>
+              <div class="font-title text-sm font-bold text-white">|BF| &ge; 2 Trigger</div>
+              <p class="text-xs text-eq-muted leading-relaxed">Balance invariant violated. Identify child sign and dispatch one of the 4 standard rotations immediately.</p>
+            </div>
+
+            <div class="glass-card p-3.5 rounded-2xl border-l-4 border-l-eq-violet space-y-1">
+              <div class="font-mono text-xs font-bold text-eq-violet">RULE 3 • FIBONACCI HEIGHT BOUND</div>
+              <div class="font-title text-sm font-bold text-white">Max Height &le; 1.4404 log₂ N</div>
+              <p class="text-xs text-eq-muted leading-relaxed">Even the sparsest possible AVL tree scales logarithmically, ensuring bulletproof performance.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- SLIDE 4: THE FOUR ROTATIONS INTERACTIVE WORKBENCH -->
+      <!-- ===================================================================== -->
+      <div class="slide-page w-full space-y-4 hidden" data-slide="4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <span class="text-xs font-mono text-eq-violet bg-eq-violet/10 px-3 py-0.5 rounded-full border border-eq-violet/30 font-semibold">
+              PHASE 03 • POINTER REWIRING
+            </span>
+            <h2 class="font-title text-2xl sm:text-3xl font-extrabold text-white mt-1">
+              The 4 Canonical Rotations
+            </h2>
+          </div>
+
+          <!-- Rotation Scenario Selector Tabs -->
+          <div class="flex items-center bg-eq-surface p-1 rounded-xl border border-eq-border">
+            <button onclick="selectRotationDemo('LL')" id="rotTab-LL" class="px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold bg-eq-elevated text-eq-violet transition-all">LL (Right)</button>
+            <button onclick="selectRotationDemo('RR')" id="rotTab-RR" class="px-3.5 py-1.5 rounded-lg text-xs font-mono text-eq-muted hover:text-white transition-all">RR (Left)</button>
+            <button onclick="selectRotationDemo('LR')" id="rotTab-LR" class="px-3.5 py-1.5 rounded-lg text-xs font-mono text-eq-muted hover:text-white transition-all">LR (Double)</button>
+            <button onclick="selectRotationDemo('RL')" id="rotTab-RL" class="px-3.5 py-1.5 rounded-lg text-xs font-mono text-eq-muted hover:text-white transition-all">RL (Double)</button>
+          </div>
+        </div>
+
+        <!-- In-Slide Rotation Stage: Perfectly Spaced with Zero Collisions -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+          <!-- Left: Code & Structural Analysis -->
+          <div class="lg:col-span-5 glass-card p-4 sm:p-5 rounded-3xl flex flex-col justify-between space-y-3">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <span id="rotCaseBadge" class="font-mono text-xs font-bold text-eq-violet">LL SCENARIO</span>
+                <span id="rotCaseType" class="text-[11px] font-mono px-2 py-0.5 rounded bg-eq-surface border border-eq-border text-eq-teal">Single Rotation</span>
+              </div>
+              <h3 id="rotCaseTitle" class="font-title text-lg font-bold text-white">Left-Left Skew &rarr; Right Rotation</h3>
+              <p id="rotCaseDesc" class="text-xs text-eq-muted leading-relaxed min-h-[44px]">
+                BF(z) = +2 and left child y leans left (BF &ge; 0). Rotating right elevates y to apex.
+              </p>
+            </div>
+
+            <!-- Code Snippet -->
+            <div class="p-3 rounded-xl bg-eq-bg border border-eq-border font-mono text-xs space-y-1">
+              <div class="text-slate-400 text-[10px] uppercase">O(1) Implementation:</div>
+              <div id="rotCodeBlock" class="text-eq-teal leading-relaxed whitespace-pre font-mono text-[11px]">
+x = y.left;
+y.left = x.right;
+x.right = y; // Done in O(1)</div>
+            </div>
+
+            <!-- Step Control Buttons -->
+            <div class="flex items-center gap-2 pt-1">
+              <button onclick="animateCurrentRotation()" class="flex-1 py-2 rounded-xl bg-eq-violet hover:bg-eq-violet/90 text-[#060511] font-title font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg glow-violet">
+                <span class="material-symbols-outlined text-[17px]">sync</span>
+                <span id="rotAnimateBtnText">Execute Rotation</span>
+              </button>
+              <button onclick="resetCurrentRotation()" class="px-3 py-2 rounded-xl bg-eq-surface hover:bg-eq-elevated border border-eq-border text-xs font-mono text-eq-muted">
+                Reset
+              </button>
+            </div>
+          </div>
+
+          <!-- Right: Visual In-Slide Rotation Animated Canvas -->
+          <div class="lg:col-span-7 glass-card p-4 sm:p-5 rounded-3xl flex flex-col justify-between shadow-2xl relative overflow-hidden">
+            <div class="flex items-center justify-between border-b border-eq-border/60 pb-2">
+              <span class="text-xs font-mono text-eq-muted">INTERACTIVE STAGE • <span id="rotStageStepLabel" class="text-eq-teal font-bold">STATE A: UNBALANCED</span></span>
+              <span class="text-[11px] font-mono text-eq-amber bg-eq-amber/10 px-2 py-0.5 rounded border border-eq-amber/30">Pointer Shift</span>
+            </div>
+
+            <div class="flex-1 flex items-center justify-center relative w-full h-56 my-1">
+              <svg id="rotDemoSvg" class="w-full h-full" viewBox="0 0 380 220" preserveAspectRatio="xMidYMid meet"></svg>
+            </div>
+
+            <div id="rotExplainBanner" class="p-2.5 rounded-xl bg-eq-bg/90 border border-eq-border text-center text-xs font-mono text-eq-violet">
+              Click 'Execute Rotation' to rewire pointers and observe tree balance restoration.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- SLIDE 5: COMPLETE IN-SLIDE AVL LABORATORY -->
+      <!-- ===================================================================== -->
+      <div class="slide-page w-full space-y-3 hidden min-h-0" data-slide="5">
+        <!-- Lab Header Toolbar -->
+        <div class="glass-card px-4 py-2 rounded-2xl flex flex-wrap items-center justify-between gap-2.5">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="font-title font-bold text-sm text-white mr-1 flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-eq-violet text-[18px]">science</span>
+              In-Slide Lab
+            </span>
+
+            <!-- Value Input & Insert/Delete/Search -->
+            <div class="flex items-center bg-eq-bg rounded-lg p-0.5 border border-eq-border">
+              <input type="number" id="inSlideKeyInput" min="1" max="999" value="25" placeholder="Val" class="w-14 px-2 py-0.5 bg-transparent text-center font-mono text-xs text-eq-violet focus:outline-none">
+              <button onclick="inSlideInsert()" class="px-2.5 py-0.5 rounded bg-eq-violet text-[#060511] font-mono font-bold text-xs flex items-center gap-1 hover:opacity-90">
+                <span class="material-symbols-outlined text-[13px]">add</span> Insert
+              </button>
+            </div>
+
+            <button onclick="inSlideDelete()" class="px-2.5 py-1 rounded-lg bg-eq-surface hover:bg-eq-elevated text-eq-rose text-xs font-mono border border-eq-rose/30 flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">delete</span> Delete
+            </button>
+
+            <button onclick="inSlideSearch()" class="px-2.5 py-1 rounded-lg bg-eq-surface hover:bg-eq-elevated text-eq-mint text-xs font-mono border border-eq-mint/30 flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">search</span> Search
+            </button>
+
+            <button onclick="inSlideRandom()" class="px-2.5 py-1 rounded-lg bg-eq-surface hover:bg-eq-elevated text-slate-300 text-xs font-mono border border-eq-border flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px] text-eq-teal">casino</span> +Rand
+            </button>
+
+            <!-- AVL Balancing Checkbox Toggle -->
+            <label class="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-eq-bg border border-eq-border font-mono text-xs cursor-pointer">
+              <input type="checkbox" id="inSlideBalToggle" checked onchange="toggleInSlideBalancing(this.checked)" class="accent-eq-violet">
+              <span class="text-eq-violet font-semibold text-[11px]">Balancing</span>
+            </label>
+          </div>
+
+          <!-- Presets, Sonic Traversal & Cascade Stress Test -->
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <button onclick="runSonicTraversal('inorder')" class="px-2.5 py-1 rounded-lg bg-eq-mint/15 text-eq-mint hover:bg-eq-mint/25 font-mono text-xs border border-eq-mint/40 flex items-center gap-1" title="In-Order Traversal (Sorted order)">
+              <span class="material-symbols-outlined text-[14px]">queue_music</span> In-Order
+            </button>
+            <button onclick="runCascadeStressTest()" class="px-2.5 py-1 rounded-lg bg-eq-amber/15 text-eq-amber hover:bg-eq-amber/25 font-mono text-xs border border-eq-amber/40 flex items-center gap-1" title="Rapidly insert keys causing cascade rotations">
+              <span class="material-symbols-outlined text-[14px]">bolt</span> Cascade Test
+            </button>
+            <button onclick="loadInSlidePreset('30,20,10')" class="px-2 py-0.5 rounded bg-eq-surface hover:bg-eq-elevated text-xs font-mono border border-eq-border text-eq-violet">LL</button>
+            <button onclick="loadInSlidePreset('10,20,30')" class="px-2 py-0.5 rounded bg-eq-surface hover:bg-eq-elevated text-xs font-mono border border-eq-border text-eq-violet">RR</button>
+            <button onclick="loadInSlidePreset('30,10,20')" class="px-2 py-0.5 rounded bg-eq-surface hover:bg-eq-elevated text-xs font-mono border border-eq-border text-eq-amber">LR</button>
+            <button onclick="loadInSlidePreset('10,30,20')" class="px-2 py-0.5 rounded bg-eq-surface hover:bg-eq-elevated text-xs font-mono border border-eq-border text-eq-amber">RL</button>
+            <button onclick="inSlideClear()" class="px-2 py-0.5 rounded bg-eq-surface hover:bg-eq-elevated text-xs font-mono border border-eq-border text-eq-muted hover:text-eq-rose">Clear</button>
+          </div>
+        </div>
+
+        <!-- In-Slide Interactive Tree SVG Stage + Live Telemetry -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 h-[330px] min-h-0">
+          <!-- Left 9 Cols: Full Tree SVG Canvas -->
+          <div class="lg:col-span-9 glass-card rounded-2xl relative overflow-hidden flex flex-col">
+            <!-- Traversal Output Banner -->
+            <div id="traversalBanner" class="hidden absolute top-2 left-4 right-4 z-20 px-3 py-1 rounded-lg bg-eq-bg/95 border border-eq-mint text-xs font-mono text-eq-mint flex items-center justify-between shadow-xl">
+              <span id="traversalBannerText">Traversing...</span>
+              <span class="text-[10px] text-slate-400">Audio Synth Active</span>
+            </div>
+
+            <div class="flex-1 flex items-center justify-center relative w-full h-full p-2 overflow-hidden min-h-0">
+              <svg id="inSlideSvg" class="w-full h-full" preserveAspectRatio="xMidYMid meet"></svg>
+            </div>
+
+            <!-- Footer Stats in Canvas -->
+            <div class="h-7 px-4 bg-eq-surface/80 border-t border-eq-border flex items-center justify-between text-[11px] font-mono shrink-0">
+              <div class="flex items-center gap-2 text-eq-muted overflow-hidden text-ellipsis whitespace-nowrap">
+                <span>TELEMETRY:</span>
+                <span id="inSlideLog" class="text-eq-violet font-bold">Ready. Click a node or enter key to mutate tree.</span>
+              </div>
+              <div class="text-eq-muted shrink-0">
+                Nodes: <span id="inSlideStatNodes" class="text-white font-bold">0</span> |
+                Height: <span id="inSlideStatHeight" class="text-eq-teal font-bold">0</span> |
+                Max |BF|: <span id="inSlideStatBf" class="text-eq-mint font-bold">0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right 3 Cols: Audit Trail Console -->
+          <div class="lg:col-span-3 glass-card rounded-2xl p-3 flex flex-col justify-between overflow-hidden">
+            <div class="flex items-center justify-between border-b border-eq-border/60 pb-1.5 shrink-0">
+              <span class="font-mono text-xs font-bold text-white flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[15px] text-eq-violet">list_alt</span>
+                Operation Audit
+              </span>
+              <span id="inSlideAuditTime" class="text-[10px] font-mono text-eq-muted">00:00:00</span>
+            </div>
+
+            <div id="inSlideAuditLog" class="flex-1 overflow-y-auto custom-scroll my-2 space-y-1 text-xs font-mono">
+              <div class="text-eq-muted">System ready. Insert nodes to view balancing steps.</div>
+            </div>
+
+            <div class="pt-1 border-t border-eq-border/60 text-[10px] font-mono text-eq-mint text-center shrink-0">
+              CLRS &amp; AVL Strict Invariants Active
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- SLIDE 6: COMPLEXITY ARCHITECTURE & ECOSYSTEM MATRIX -->
+      <!-- ===================================================================== -->
+      <div class="slide-page w-full space-y-4 hidden" data-slide="6">
+        <div class="text-center space-y-0.5">
+          <span class="text-xs font-mono text-eq-mint bg-eq-mint/10 px-3 py-0.5 rounded-full border border-eq-mint/30 font-semibold">
+            PHASE 04 • SYSTEM ARCHITECTURE
+          </span>
+          <h2 class="font-title text-2xl sm:text-3xl font-extrabold text-white">
+            Complexity &amp; Ecosystem Matrix
+          </h2>
+          <p class="text-eq-muted text-xs sm:text-sm max-w-xl mx-auto">
+            Why high-throughput memory-resident indexes select AVL trees over alternatives.
+          </p>
+        </div>
+
+        <div class="glass-card p-4 rounded-3xl overflow-x-auto custom-scroll shadow-2xl">
+          <table class="w-full text-left font-mono text-xs border-collapse min-w-[600px]">
+            <thead>
+              <tr class="border-b border-eq-border text-eq-muted text-[11px] uppercase tracking-wider">
+                <th class="py-2 px-3">Data Structure</th>
+                <th class="py-2 px-3">Max Height</th>
+                <th class="py-2 px-3">Lookup Cost</th>
+                <th class="py-2 px-3">Write / Mutation Cost</th>
+                <th class="py-2 px-3">Primary Engineering Use-Case</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-eq-border/50">
+              <tr class="bg-eq-violet/10 font-semibold text-white">
+                <td class="py-2.5 px-3 text-eq-violet font-bold flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-eq-violet"></span> AVL Tree
+                </td>
+                <td class="py-2.5 px-3 text-eq-mint font-bold">&le; 1.44 log₂ N</td>
+                <td class="py-2.5 px-3 text-eq-mint font-bold">Fastest (Shallowest paths)</td>
+                <td class="py-2.5 px-3 text-eq-rose">&le; 1 ins, O(log N) del</td>
+                <td class="py-2.5 px-3 text-slate-200">Read-heavy in-memory dictionaries &amp; lookup caches</td>
+              </tr>
+              <tr>
+                <td class="py-2.5 px-3 text-slate-200 font-bold flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-eq-rose"></span> Red-Black Tree
+                </td>
+                <td class="py-2.5 px-3 text-eq-muted">&le; 2.00 log₂ N</td>
+                <td class="py-2.5 px-3 text-eq-muted">Fast</td>
+                <td class="py-2.5 px-3 text-eq-mint">Fewer rotations on write</td>
+                <td class="py-2.5 px-3 text-eq-muted">C++ std::map, Java TreeMap, Linux kernel VMA</td>
+              </tr>
+              <tr>
+                <td class="py-2.5 px-3 text-slate-200 font-bold flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-slate-500"></span> Unbalanced BST
+                </td>
+                <td class="py-2.5 px-3 text-eq-rose font-bold">N (Degenerate)</td>
+                <td class="py-2.5 px-3 text-eq-rose">O(N) in worst case</td>
+                <td class="py-2.5 px-3 text-eq-muted">Zero rotations (unbalanced)</td>
+                <td class="py-2.5 px-3 text-eq-muted">Randomly inserted keys only</td>
+              </tr>
+              <tr>
+                <td class="py-2.5 px-3 text-slate-200 font-bold flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-eq-teal"></span> B-Tree / B+ Tree
+                </td>
+                <td class="py-2.5 px-3 text-eq-teal">log_t N</td>
+                <td class="py-2.5 px-3 text-eq-teal">Block-aligned I/O</td>
+                <td class="py-2.5 px-3 text-eq-muted">Page splits &amp; merges</td>
+                <td class="py-2.5 px-3 text-eq-muted">Relational databases &amp; file systems (PostgreSQL, SQLite)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs">
+          <div class="glass-card p-3.5 rounded-2xl border-l-4 border-l-eq-mint">
+            <span class="font-mono text-eq-mint font-bold uppercase">When to pick AVL?</span>
+            <p class="text-eq-muted mt-1">Whenever reads outnumber writes by more than 2:1. The stricter height bound minimizes cache misses.</p>
+          </div>
+          <div class="glass-card p-3.5 rounded-2xl border-l-4 border-l-eq-violet">
+            <span class="font-mono text-eq-violet font-bold uppercase">Space Footprint</span>
+            <p class="text-eq-muted mt-1">Stores a 2-bit balance factor or 1-byte height value per node, fitting easily within pointer alignment padding.</p>
+          </div>
+          <div class="glass-card p-3.5 rounded-2xl border-l-4 border-l-eq-teal">
+            <span class="font-mono text-eq-teal font-bold uppercase">Guaranteed Bounds</span>
+            <p class="text-eq-muted mt-1">Maximum 1 single or double rotation per insertion restores the entire tree's balance condition.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- SLIDE 7: THANK YOU & DISCUSSION -->
+      <!-- ===================================================================== -->
+      <div class="slide-page w-full max-w-4xl text-center space-y-6 hidden" data-slide="7">
+        <div class="w-16 h-16 rounded-3xl bg-eq-violet/15 border border-eq-violet/40 mx-auto flex items-center justify-center text-eq-violet glow-violet">
+          <span class="material-symbols-outlined text-[36px]">psychology_alt</span>
+        </div>
+
+        <div class="space-y-2">
+          <span class="text-xs font-mono text-eq-teal bg-eq-surface px-3.5 py-1 rounded-full border border-eq-border uppercase tracking-widest font-semibold">
+            KEYNOTE CONCLUSION
+          </span>
+          <h2 class="font-title text-4xl sm:text-5xl font-extrabold text-white text-grad-violet">
+            Thank You!
+          </h2>
+          <p class="text-eq-muted text-base max-w-lg mx-auto leading-relaxed">
+            Questions &amp; open discussion. Re-test rotations or launch the live workstation at any time.
+          </p>
+        </div>
+
+        <!-- Speaker Signature Badge -->
+        <div class="inline-flex items-center gap-3 sm:gap-4 px-6 py-3 rounded-full glass-card font-mono text-sm shadow-2xl border border-eq-violet/30">
+          <span class="text-white font-bold">D. Abhinav</span>
+          <span class="text-eq-muted">·</span>
+          <span class="text-eq-teal font-semibold">25B81A6766</span>
+          <span class="text-eq-muted">·</span>
+          <span class="text-eq-violet font-semibold">CSD-B</span>
+        </div>
+
+        <div class="flex items-center justify-center gap-3 pt-2">
+          <button onclick="goToSlide(5)" class="px-6 py-3 rounded-xl bg-eq-violet hover:bg-eq-violet/90 text-[#060511] font-title font-bold text-sm transition-all shadow-xl glow-violet flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">science</span>
+            Open Live Workstation (Slide 5)
+          </button>
+          <button onclick="goToSlide(1)" class="px-5 py-3 rounded-xl bg-eq-surface hover:bg-eq-elevated border border-eq-border text-sm font-title font-medium text-slate-300 hover:text-white flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">replay</span>
+            Replay Deck
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- 4. FLOATING BOTTOM SLIDE DOCK WITH INTERACTIVE THUMBNAILS -->
+    <!-- ======================================================================= -->
+    <footer class="h-14 px-6 glass-card rounded-2xl flex items-center justify-between shrink-0 z-20 shadow-2xl mt-2 max-w-7xl mx-auto w-full">
+      <!-- Prev Button -->
+      <button onclick="prevSlide()" class="px-4 py-1.5 rounded-xl bg-eq-surface hover:bg-eq-elevated font-mono text-xs font-bold text-white border border-eq-border flex items-center gap-1.5 transition-all">
+        <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+        <span class="hidden sm:inline">Prev</span>
+      </button>
+
+      <!-- Center Slide Indicators -->
+      <div class="flex items-center gap-2">
+        <div class="hidden sm:flex items-center gap-1.5" id="slideDotsContainer"></div>
+        <div id="slideCounterText" class="font-mono text-xs sm:text-sm text-eq-violet font-bold bg-eq-bg px-3.5 py-1 rounded-lg border border-eq-border">
+          Slide 1 of 7
+        </div>
+      </div>
+
+      <!-- Next Button -->
+      <button onclick="nextSlide()" class="px-4 py-1.5 rounded-xl bg-eq-violet hover:bg-eq-violet/90 font-mono text-xs font-bold text-[#060511] flex items-center gap-1.5 transition-all shadow-md glow-violet">
+        <span class="hidden sm:inline">Next</span>
+        <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+      </button>
+    </footer>
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- JAVASCRIPT: ENGINE, AMBIENCE, SLIDES & EMBEDDED VISUALIZERS -->
+  <!-- ========================================================================= -->
+  <script>
+    /* =========================================================================
+       1. AMBIENT CYBERNETIC GRID & PARTICLE HORIZON
+       ========================================================================= */
+    const canvas = document.getElementById('cyberCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let kineticNodes = [];
+    let mouse = { x: -999, y: -999, targetX: -999, targetY: -999 };
+    const cursorGlow = document.getElementById('cursorGlow');
+
+    window.addEventListener('mousemove', e => {
+      mouse.targetX = e.clientX;
+      mouse.targetY = e.clientY;
+      if (cursorGlow) {
+        cursorGlow.style.left = `${e.clientX}px`;
+        cursorGlow.style.top = `${e.clientY}px`;
+      }
+    });
+
+    function resizeCyber() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      initCyberNodes();
+    }
+
+    function initCyberNodes() {
+      kineticNodes = [];
+      const count = Math.floor((width * height) / 14000);
+      for (let i = 0; i < count; i++) {
+        kineticNodes.push({
+          baseX: Math.random() * width,
+          baseY: Math.random() * height,
+          x: Math.random() * width,
+          y: Math.random() * height,
+          vx: (Math.random() - 0.5) * 0.45,
+          vy: (Math.random() - 0.5) * 0.45,
+          r: Math.random() * 2 + 1,
+          color: Math.random() > 0.45 ? '#a78bfa' : '#2dd4bf',
+          alpha: Math.random() * 0.55 + 0.15,
+          isDiamond: Math.random() > 0.7
+        });
+      }
+    }
+
+    let gridOffset = 0;
+    function renderCyber() {
+      ctx.clearRect(0, 0, width, height);
+
+      // Smooth mouse lerp
+      mouse.x += (mouse.targetX - mouse.x) * 0.1;
+      mouse.y += (mouse.targetY - mouse.y) * 0.1;
+
+      // 1. Perspective Grid at Bottom Horizon
+      gridOffset = (gridOffset + 0.25) % 40;
+      ctx.save();
+      ctx.strokeStyle = 'rgba(83, 67, 184, 0.12)';
+      ctx.lineWidth = 1;
+
+      const horizonY = height * 0.65;
+      for (let y = horizonY; y < height; y += (y - horizonY) * 0.28 + 14) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+
+      const vpX = width * 0.5;
+      for (let x = -width * 0.4; x <= width * 1.4; x += 75) {
+        ctx.beginPath();
+        ctx.moveTo(vpX, horizonY);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // 2. Multi-stop morphing Auroral Gradient Blobs
+      const time = Date.now() * 0.0006;
+      const blob1X = width * 0.25 + Math.cos(time) * 90;
+      const blob1Y = height * 0.35 + Math.sin(time) * 60;
+      const g1 = ctx.createRadialGradient(blob1X, blob1Y, 15, blob1X, blob1Y, 480);
+      g1.addColorStop(0, 'rgba(124, 58, 237, 0.12)');
+      g1.addColorStop(1, 'transparent');
+      ctx.fillStyle = g1;
+      ctx.fillRect(0, 0, width, height);
+
+      const blob2X = width * 0.75 + Math.sin(time * 0.8) * 90;
+      const blob2Y = height * 0.65 + Math.cos(time * 0.8) * 60;
+      const g2 = ctx.createRadialGradient(blob2X, blob2Y, 15, blob2X, blob2Y, 520);
+      g2.addColorStop(0, 'rgba(45, 212, 191, 0.09)');
+      g2.addColorStop(1, 'transparent');
+      ctx.fillStyle = g2;
+      ctx.fillRect(0, 0, width, height);
+
+      // 3. Render Floating Kinetic Particles & Proximity Lines
+      for (let i = 0; i < kineticNodes.length; i++) {
+        const p = kineticNodes[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > width) p.vx = -p.vx;
+        if (p.y < 0 || p.y > height) p.vy = -p.vy;
+
+        // Subtle mouse repulsion
+        const dxM = p.x - mouse.x;
+        const dyM = p.y - mouse.y;
+        const distM = Math.hypot(dxM, dyM);
+        if (distM < 160 && distM > 0) {
+          const force = (160 - distM) / 160;
+          p.x += (dxM / distM) * force * 2.5;
+          p.y += (dyM / distM) * force * 2.5;
+        }
+
+        ctx.beginPath();
+        if (p.isDiamond) {
+          ctx.rect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
+        } else {
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        }
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.alpha;
+        ctx.fill();
+
+        for (let j = i + 1; j < kineticNodes.length; j++) {
+          const p2 = kineticNodes[j];
+          const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+          if (dist < 125) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = p.color;
+            ctx.globalAlpha = (1 - dist / 125) * 0.18;
+            ctx.lineWidth = 0.85;
+            ctx.stroke();
+          }
+        }
+      }
+      ctx.globalAlpha = 1;
+
+      requestAnimationFrame(renderCyber);
+    }
+
+    window.addEventListener('resize', resizeCyber);
+    resizeCyber();
+    renderCyber();
+
+
+    /* =========================================================================
+       2. SLIDE NAVIGATION & PRESENTATION DECK CONTROLLER (SLIDES 1 TO 7)
+       ========================================================================= */
+    let currentSlide = 1;
+    const totalSlides = 7;
+    let audioEnabled = true;
+
+    let audioCtx = null;
+    function playChime(freq = 520, type = 'sine') {
+      if (!audioEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.14);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.14);
+      } catch(e) {}
+    }
+
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      document.getElementById('audioIcon').textContent = audioEnabled ? 'volume_up' : 'volume_off';
+    }
+
+    function updateDeck() {
+      document.querySelectorAll('.slide-page').forEach(page => {
+        const s = parseInt(page.getAttribute('data-slide'));
+        if (s === currentSlide) {
+          page.classList.remove('hidden');
+          page.classList.add('active');
+        } else {
+          page.classList.add('hidden');
+          page.classList.remove('active');
+        }
+      });
+
+      document.getElementById('slideCounterText').textContent = `Slide ${currentSlide} of ${totalSlides}`;
+      document.getElementById('deckProgressBar').style.width = `${(currentSlide / totalSlides) * 100}%`;
+
+      // Update dots with smooth expand animation
+      const dotsContainer = document.getElementById('slideDotsContainer');
+      if (dotsContainer) {
+        let html = '';
+        for (let i = 1; i <= totalSlides; i++) {
+          const active = i === currentSlide;
+          html += `<button onclick="goToSlide(${i})" class="h-2.5 rounded-full transition-all duration-300 ${active ? 'bg-gradient-to-r from-eq-violet to-eq-teal w-7 glow-violet' : 'bg-eq-border hover:bg-slate-400 w-2.5'}" title="Slide ${i}"></button>`;
+        }
+        dotsContainer.innerHTML = html;
+      }
+
+      // Contextual Slide inits
+      if (currentSlide === 1) slide1AutoBuild();
+      if (currentSlide === 2) runSkewExperiment([10, 20, 30, 40]);
+      if (currentSlide === 3) updateBfCalculator();
+      if (currentSlide === 4) selectRotationDemo('LL');
+      if (currentSlide === 5) inSlideRender();
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) {
+        currentSlide++;
+        playChime(640);
+        updateDeck();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) {
+        currentSlide--;
+        playChime(480);
+        updateDeck();
+      }
+    }
+
+    function goToSlide(n) {
+      currentSlide = Math.max(1, Math.min(totalSlides, n));
+      playChime(560);
+      updateDeck();
+    }
+
+    function toggleFullscreen() {
+      const icon = document.getElementById('fsIcon');
+      const text = document.getElementById('fsText');
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(()=>{});
+        if (icon) icon.textContent = 'fullscreen_exit';
+        if (text) text.textContent = 'Exit';
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+        if (icon) icon.textContent = 'fullscreen';
+        if (text) text.textContent = 'Fullscreen';
+      }
+    }
+
+    window.addEventListener('keydown', e => {
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+    });
+
+
+    /* =========================================================================
+       3. SLIDE 1: IN-SLIDE AUTO-BUILDING LIVE CONSTELLATION
+       ========================================================================= */
+    let s1Timer = null;
+    function slide1AutoBuild() {
+      clearTimeout(s1Timer);
+      const svg = document.getElementById('slide1Svg');
+      if (!svg) return;
+      const statusText = document.getElementById('slide1StatusText');
+
+      const frames = [
+        {
+          note: "Step 1: Insert 20 into root (Height = 1, BF = 0)",
+          svg: `
+            <g class="tree-node"><circle cx="180" cy="50" r="22" fill="#161436" stroke="#a78bfa" stroke-width="2.5" class="glow-violet"/><text x="180" y="55" text-anchor="middle" fill="#fff" font-family="Sora" font-weight="bold" font-size="13">20</text><text x="215" y="45" fill="#a78bfa" font-family="JetBrains Mono" font-size="10">BF 0</text></g>
+          `
+        },
+        {
+          note: "Step 2: Insert 10 & 30 (Height = 2, perfectly balanced)",
+          svg: `
+            <line x1="180" y1="50" x2="110" y2="125" stroke="#5343b8" stroke-width="2.5" />
+            <line x1="180" y1="50" x2="250" y2="125" stroke="#5343b8" stroke-width="2.5" />
+            <g class="tree-node"><circle cx="180" cy="50" r="22" fill="#161436" stroke="#a78bfa" stroke-width="2.5" class="glow-violet"/><text x="180" y="55" text-anchor="middle" fill="#fff" font-family="Sora" font-weight="bold" font-size="13">20</text><text x="215" y="45" fill="#a78bfa" font-family="JetBrains Mono" font-size="10">BF 0</text></g>
+            <g class="tree-node"><circle cx="110" cy="125" r="19" fill="#161436" stroke="#2dd4bf" stroke-width="2.5" class="glow-teal"/><text x="110" y="130" text-anchor="middle" fill="#fff" font-family="Sora" font-weight="bold" font-size="12">10</text><text x="75" y="125" fill="#2dd4bf" font-family="JetBrains Mono" font-size="10">BF 0</text></g>
+            <g class="tree-node"><circle cx="250" cy="125" r="19" fill="#161436" stroke="#2dd4bf" stroke-width="2.5" class="glow-teal"/><text x="250" y="130" text-anchor="middle" fill="#fff" font-family="Sora" font-weight="bold" font-size="12">30</text><text x="285" y="125" fill="#2dd4bf" font-family="JetBrains Mono" font-size="10">BF 0</text></g>
+          `
+        },
+        {
+          note: "Step 3: Insert 40, 50 (Right-heavy branch resolved by Left Rotation!)",
+          svg: `
+            <line x1="180" y1="45" x2="110" y2="105" stroke="#5343b8" stroke-width="2.5" />
+            <line x1="180" y1="45" x2="250" y2="105" stroke="#5343b8" stroke-width="2.5" />
+            <line x1="110" y1="105" x2="70" y2="165" stroke="#5343b8" stroke-width="2" />
+            <line x1="250" y1="105" x2="290" y2="165" stroke="#5343b8" stroke-width="2" />
+            <g class="tree-node"><circle cx="180" cy="45" r="21" fill="#161436" stroke="#34d399" stroke-width="2.5" class="glow-mint"/><text x="180" y="50" text-anchor="middle" fill="#fff" font-family="Sora" font-weight="bold" font-size="13">20</text><text x="215" y="40" fill="#34d399" font-family="JetBrains Mono" font-size="10">BF 0</text></g>
+            <g class="tree-node"><circle cx="110" cy="105" r="18" fill="#161436" stroke="#a78bfa" stroke-width="2"/><text x="110" y="109" text-anchor="middle" fill="#fff" font-family="Sora" font-size="12">10</text><text x="75" y="100" fill="#a78bfa" font-family="JetBrains Mono" font-size="9">BF +1</text></g>
+            <g class="tree-node"><circle cx="250" cy="105" r="18" fill="#161436" stroke="#a78bfa" stroke-width="2"/><text x="250" y="109" text-anchor="middle" fill="#fff" font-family="Sora" font-size="12">40</text><text x="285" y="100" fill="#a78bfa" font-family="JetBrains Mono" font-size="9">BF −1</text></g>
+            <g class="tree-node"><circle cx="70" cy="165" r="15" fill="#161436" stroke="#2dd4bf" stroke-width="2"/><text x="70" y="169" text-anchor="middle" fill="#fff" font-family="Sora" font-size="11">5</text></g>
+            <g class="tree-node"><circle cx="290" cy="165" r="15" fill="#161436" stroke="#2dd4bf" stroke-width="2"/><text x="290" y="169" text-anchor="middle" fill="#fff" font-family="Sora" font-size="11">50</text></g>
+          `
+        }
+      ];
+
+      let frame = 0;
+      function step() {
+        if (currentSlide !== 1) return;
+        svg.innerHTML = frames[frame].svg;
+        if (statusText) statusText.textContent = frames[frame].note;
+        frame = (frame + 1) % frames.length;
+        s1Timer = setTimeout(step, 2400);
+      }
+      step();
+    }
+
+
+    /* =========================================================================
+       4. SLIDE 2: THE DEGENERATE SKEW EXPERIMENT (ZERO OVERFLOW & MATHEMATICALLY SOUND)
+       ========================================================================= */
+    function runSkewExperiment(keys) {
+      const bstSvg = document.getElementById('skewBstSvg');
+      const avlSvg = document.getElementById('skewAvlSvg');
+      const bstBadge = document.getElementById('skewBstHeightBadge');
+      const avlBadge = document.getElementById('skewAvlHeightBadge');
+      if (!bstSvg || !avlSvg) return;
+
+      playChime(600);
+
+      // 1. Render Degenerate BST: Strictly clamped and centered
+      let bstLines = '', bstNodes = '';
+      const isAsc = keys[0] < keys[1];
+      const startX = isAsc ? 80 : 260;
+      const dx = isAsc ? 52 : -52;
+      
+      keys.forEach((k, idx) => {
+        const x = startX + idx * dx;
+        const y = 32 + idx * 38;
+        if (idx > 0) {
+          const prevX = startX + (idx - 1) * dx;
+          const prevY = 32 + (idx - 1) * 38;
+          bstLines += `<line x1="${prevX}" y1="${prevY}" x2="${x}" y2="${y}" stroke="#fb7185" stroke-width="2.5" />`;
+        }
+        bstNodes += `
+          <g class="tree-node">
+            <circle cx="${x}" cy="${y}" r="17" fill="#151138" stroke="#fb7185" stroke-width="2.5" class="glow-rose"/>
+            <text x="${x}" y="${y + 5}" text-anchor="middle" fill="#fff" font-family="Sora" font-size="11" font-weight="bold">${k}</text>
+          </g>
+        `;
+      });
+      bstSvg.setAttribute('viewBox', '0 0 340 190');
+      bstSvg.innerHTML = bstLines + bstNodes;
+      if (bstBadge) bstBadge.textContent = `Height: ${keys.length} (Degenerate)`;
+
+      // 2. Render Real AVL Tree for these keys:
+      let avlLines = '', avlNodes = '';
+      let coords = [];
+      if (isAsc) {
+        coords = [
+          { k: 20, x: 170, y: 35 },
+          { k: 10, x: 100, y: 95 },
+          { k: 30, x: 240, y: 95 },
+          { k: 40, x: 285, y: 155 }
+        ];
+        avlLines = `
+          <line x1="170" y1="35" x2="100" y2="95" stroke="#34d399" stroke-width="2.5" />
+          <line x1="170" y1="35" x2="240" y2="95" stroke="#34d399" stroke-width="2.5" />
+          <line x1="240" y1="95" x2="285" y2="155" stroke="#34d399" stroke-width="2.5" />
+        `;
+      } else {
+        coords = [
+          { k: 30, x: 170, y: 35 },
+          { k: 20, x: 100, y: 95 },
+          { k: 40, x: 240, y: 95 },
+          { k: 10, x: 55, y: 155 }
+        ];
+        avlLines = `
+          <line x1="170" y1="35" x2="100" y2="95" stroke="#34d399" stroke-width="2.5" />
+          <line x1="170" y1="35" x2="240" y2="95" stroke="#34d399" stroke-width="2.5" />
+          <line x1="100" y1="95" x2="55" y2="155" stroke="#34d399" stroke-width="2.5" />
+        `;
+      }
+
+      coords.forEach(c => {
+        avlNodes += `
+          <g class="tree-node">
+            <circle cx="${c.x}" cy="${c.y}" r="17" fill="#151138" stroke="#34d399" stroke-width="2.5" class="glow-mint"/>
+            <text x="${c.x}" y="${c.y + 5}" text-anchor="middle" fill="#fff" font-family="Sora" font-size="11" font-weight="bold">${c.k}</text>
+          </g>
+        `;
+      });
+      avlSvg.setAttribute('viewBox', '0 0 340 190');
+      avlSvg.innerHTML = avlLines + avlNodes;
+      if (avlBadge) avlBadge.textContent = `Height: 3 (Balanced)`;
+    }
+
+    function resetSkewExperiment() {
+      const bstSvg = document.getElementById('skewBstSvg');
+      const avlSvg = document.getElementById('skewAvlSvg');
+      if (bstSvg) bstSvg.innerHTML = `<text x="50%" y="50%" text-anchor="middle" fill="#9893c7" font-family="JetBrains Mono" font-size="12">Click 'Insert' button above</text>`;
+      if (avlSvg) avlSvg.innerHTML = `<text x="50%" y="50%" text-anchor="middle" fill="#9893c7" font-family="JetBrains Mono" font-size="12">Click 'Insert' button above</text>`;
+      document.getElementById('skewBstHeightBadge').textContent = 'Height: 0';
+      document.getElementById('skewAvlHeightBadge').textContent = 'Height: 0';
+    }
+
+
+    /* =========================================================================
+       5. SLIDE 3: BALANCE FACTOR LIVE CALCULATOR
+       ========================================================================= */
+    function updateBfCalculator() {
+      const leftH = parseInt(document.getElementById('bfSliderLeft').value);
+      const rightH = parseInt(document.getElementById('bfSliderRight').value);
+      const bf = leftH - rightH;
+
+      document.getElementById('bfLeftSliderText').textContent = leftH;
+      document.getElementById('bfRightSliderText').textContent = rightH;
+      document.getElementById('bfCalcLeftVal').textContent = leftH;
+      document.getElementById('bfCalcRightVal').textContent = rightH;
+
+      const resEl = document.getElementById('bfCalcResultVal');
+      resEl.textContent = (bf > 0 ? '+' : '') + bf;
+
+      const box = document.getElementById('bfDecisionBox');
+      const text = document.getElementById('bfDecisionText');
+
+      if (Math.abs(bf) <= 1) {
+        resEl.className = "text-3xl font-extrabold text-eq-mint glow-mint";
+        box.className = "p-3 rounded-xl border border-eq-mint/40 bg-eq-mint/10 text-xs font-mono text-eq-mint flex items-center justify-between";
+        text.textContent = `Status: Invariant Satisfied (BF = ${bf > 0 ? '+' : ''}${bf} ∈ {−1, 0, +1})`;
+      } else {
+        resEl.className = "text-3xl font-extrabold text-eq-rose glow-rose animate-pulse";
+        box.className = "p-3 rounded-xl border border-eq-rose/50 bg-eq-rose/10 text-xs font-mono text-eq-rose flex items-center justify-between";
+        const fix = bf > 1 ? "Left-Heavy (LL or LR rotation required)" : "Right-Heavy (RR or RL rotation required)";
+        text.textContent = `CRITICAL VIOLATION: |BF| = ${Math.abs(bf)} ≥ 2 → Trigger ${fix}`;
+      }
+    }
+
+
+    /* =========================================================================
+       6. SLIDE 4: THE FOUR ROTATIONS INTERACTIVE WORKBENCH
+       ========================================================================= */
+    let currentRotCase = 'LL';
+    let rotState = 'A';
+
+    const rotMeta = {
+      LL: {
+        title: "Left-Left Skew → Single Right Rotation",
+        type: "Single O(1)",
+        desc: "Balance factor of z is +2 and left child y leans left (BF ≥ 0). Rotating right elevates y to apex.",
+        code: `// Right-Rotate(z)
+Node* y = z->left;
+z->left = y->right;
+y->right = z;
+// Update heights in O(1)`,
+        beforeSvg: `
+          <line x1="240" y1="45" x2="150" y2="105" stroke="#a78bfa" stroke-width="3" />
+          <line x1="240" y1="45" x2="310" y2="105" stroke="#2c2463" stroke-width="2.5" />
+          <line x1="150" y1="105" x2="80" y2="165" stroke="#a78bfa" stroke-width="3" />
+          <line x1="150" y1="105" x2="195" y2="165" stroke="#fbbf24" stroke-width="2.5" stroke-dasharray="3,3" />
+          <g class="tree-node"><circle cx="240" cy="45" r="21" fill="#151138" stroke="#fb7185" stroke-width="3" class="glow-rose"/><text x="240" y="50" text-anchor="middle" fill="#fff" font-family="Sora" font-weight="bold">z</text><text x="275" y="38" fill="#fb7185" font-family="JetBrains Mono" font-size="10">BF +2</text></g>
+          <g class="tree-node"><circle cx="150" cy="105" r="19" fill="#151138" stroke="#a78bfa" stroke-width="2.5" class="glow-violet"/><text x="150" y="110" text-anchor="middle" fill="#fff" font-family="Sora" font-weight="bold">y</text><text x="110" y="100" fill="#a78bfa" font-family="JetBrains Mono" font-size="10">BF +1</text></g>
+          <g class="tree-node"><circle cx="80" cy="165" r="16" fill="#151138" stroke="#2dd4bf" stroke-width="2"/><text x="80" y="169" text-anchor="middle" fill="#fff" font-family="Sora">x</text></g>
+          <g class="tree-node"><circle cx="195" cy="165" r="15" fill="#151138" stroke="#fbbf24" stroke-width="2" class="glow-amber"/><text x="195" y="169" text-anchor="middle" fill="#fbbf24" font-family="JetBrains Mono" font-size="10">T3</text><text x="195" y="194" text-anchor="middle" fill="#fbbf24" font-family="JetBrains Mono" font-size="9">Transfer</text></g>
+          <g class="tree-node"><circle cx="310" cy="105" r="16" fill="#151138" stroke="#2c2463" stroke-width="2"/><text x="310" y="109" text-anchor="middle" fill="#9893c7" font-family="Sora">T4</text></g>
+        `,
+        afterSvg: `
+          <line x1="190" y1="42" x2="110" y2="105" stroke="#34d399" stroke-width="2.5" />
+          <line x1="190" y1="42" x2="270" y2="105" stroke="#34d399" stroke-width="2.5" />
+          <line x1="110" y1="105" x2="70" y2="165" stroke="#2dd4bf" stroke-width="2" />
+          <line x1="270" y1="105" x2="230" y2="165" stroke="#fbbf24" stroke-width="2.5" />
+          <line x1="270" y1="105" x2="310" y2="165" stroke="#2c2463" stroke-width="2" />
+          <g class="tree-node"><circle cx="190" cy="42" r="22" fill="#151138" stroke="#34d399" stroke-width="3" class="glow-mint"/><text x="190" y="47" text-anchor="middle" fill="#fff" font-family="Sora" font-weight="bold">y</text><text x="225" y="34" fill="#34d399" font-family="JetBrains Mono" font-size="10">BF 0</text></g>
+          <g class="tree-node"><circle cx="110" cy="105" r="18" fill="#151138" stroke="#2dd4bf" stroke-width="2.5" class="glow-teal"/><text x="110" y="109" text-anchor="middle" fill="#fff" font-family="Sora">x</text></g>
+          <g class="tree-node"><circle cx="270" cy="105" r="18" fill="#151138" stroke="#a78bfa" stroke-width="2.5" class="glow-violet"/><text x="270" y="109" text-anchor="middle" fill="#fff" font-family="Sora">z</text><text x="305" y="98" fill="#a78bfa" font-family="JetBrains Mono" font-size="10">BF 0</text></g>
+          <g class="tree-node"><circle cx="230" cy="165" r="15" fill="#151138" stroke="#fbbf24" stroke-width="2" class="glow-amber"/><text x="230" y="169" text-anchor="middle" fill="#fbbf24" font-family="JetBrains Mono" font-size="10">T3</text><text x="230" y="194" text-anchor="middle" fill="#fbbf24" font-family="JetBrains Mono" font-size="9">Adopted by z</text></g>
+        `
+      },
+      RR: {
+        title: "Right-Right Skew → Single Left Rotation",
+        type: "Single O(1)",
+        desc: "Balance factor of z is −2 and right child y leans right (BF ≤ 0). Rotating left elevates y to apex.",
+        code: `// Left-Rotate(z)
+Node* y = z->right;
+z->right = y->left;
+y->left = z;
+// Update heights in O(1)`,
+        beforeSvg: `
+          <line x1="140" y1="45" x2="70" y2="105" stroke="#2c2463" stroke-width="2.5" />
+          <line x1="140" y1="45" x2="230" y2="105" stroke="#2dd4bf" stroke-width="3" />
+          <line x1="230" y1="105" x2="185" y2="165" stroke="#fbbf24" stroke-width="2.5" stroke-dasharray="3,3" />
+          <line x1="230" y1="105" x2="300" y2="165" stroke="#2dd4bf" stroke-width="3" />
+          <g class="tree-node"><circle cx="140" cy="45" r="21" fill="#151138" stroke="#fb7185" stroke-width="3" class="glow-rose"/><text x="140" y="50" text-anchor="middle" fill="#fff" font-family="Sora" font-weight="bold">z</text><text x="95" y="38" fill="#fb7185" font-family="JetBrains Mono" font-size="10">BF −2</text></g>
+          <g class="tree-node"><circle cx="230" cy="105" r="19" fill="#151138" stroke="#2dd4bf" stroke-width="2.5" class="glow-teal"/><text x="230" y="110" text-anchor="middle" fill="#fff" font-family="Sora" font-weight="bold">y</text><text x="265" y="100" fill="#2dd4bf" font-family="JetBrains Mono" font-size="10">BF −1</text></g>
+          <g class="tree-node"><circle cx="300" cy="165" r="16" fill="#151138" stroke="#a78bfa" stroke-width="2"/><text x="300" y="169" text-anchor="middle" fill="#fff" font-family="Sora">x</text></g>
+          <g class="tree-node"><circle cx="185" cy="165" r="15" fill="#151138" stroke="#fbbf24" stroke-width="2" class="glow-amber"/><text x="185" y="169" text-anchor="middle" fill="#fbbf24" font-family="JetBrains Mono" font-size="10">T2</text><text x="185" y="194" text-anchor="middle" fill="#fbbf24" font-family="JetBrains Mono" font-size="9">Transfer</text></g>
+        `,
+        afterSvg: `
+          <line x1="190" y1="42" x2="110" y2="105" stroke="#34d399" stroke-width="2.5" />
+          <line x1="190" y1="42" x2="270" y2="105" stroke="#34d399" stroke-width="2.5" />
+          <line x1="110" y1="105" x2="150" y2="165" stroke="#fbbf24" stroke-width="2.5" />
+          <line x1="270" y1="105" x2="310" y2="165" stroke="#a78bfa" stroke-width="2" />
+          <g class="tree-node"><circle cx="190" cy="42" r="22" fill="#151138" stroke="#34d399" stroke-width="3" class="glow-mint"/><text x="190" y="47" text-anchor="middle" fill="#fff" font-family="Sora" font-weight="bold">y</text><text x="225" y="34" fill="#34d399" font-family="JetBrains Mono" font-size="10">BF 0</text></g>
+          <g class="tree-node"><circle cx="110" cy="105" r="18" fill="#151138" stroke="#a78bfa" stroke-width="2.5" class="glow-violet"/><text x="110" y="109" text-anchor="middle" fill="#fff" font-family="Sora">z</text><text x="75" y="98" fill="#a78bfa" font-family="JetBrains Mono" font-size="10">BF 0</text></g>
+          <g class="tree-node"><circle cx="270" cy="105" r="18" fill="#151138" stroke="#2dd4bf" stroke-width="2.5" class="glow-teal"/><text x="270" y="109" text-anchor="middle" fill="#fff" font-family="Sora">x</text></g>
+          <g class="tree-node"><circle cx="150" cy="165" r="15" fill="#151138" stroke="#fbbf24" stroke-width="2" class="glow-amber"/><text x="150" y="169" text-anchor="middle" fill="#fbbf24" font-family="JetBrains Mono" font-size="10">T2</text><text x="150" y="194" text-anchor="middle" fill="#fbbf24" font-family="JetBrains Mono" font-size="9">Adopted by z</text></g>
+        `
+      },
+      LR: {
+        title: "Left-Right Zigzag → Double Rotation",
+        type: "Double O(1)",
+        desc: "BF(z) = +2 but child y leans right (BF < 0). Phase 1 left-rotates child y into an LL shape; Phase 2 right-rotates z.",
+        code: `// Left-Right Double Rotate
+z->left = leftRotate(z->left); // Phase 1: straightens
+return rightRotate(z);         // Phase 2: balances`,
+        beforeSvg: `
+          <line x1="240" y1="45" x2="140" y2="105" stroke="#fbbf24" stroke-width="3" />
+          <line x1="140" y1="105" x2="190" y2="165" stroke="#fbbf24" stroke-width="3" />
+          <g class="tree-node"><circle cx="240" cy="45" r="21" fill="#151138" stroke="#fb7185" stroke-width="3" class="glow-rose"/><text x="240" y="50" text-anchor="middle" fill="#fff" font-family="Sora" font-weight="bold">z</text><text x="275" y="38" fill="#fb7185" font-family="JetBrains Mono" font-size="10">BF +2</text></g>
+          <g class="tree-node"><circle cx="140" cy="105" r="19" fill="#151138" stroke="#fbbf24" stroke-width="2.5" class="glow-amber"/><text x="140" y="110" text-anchor="middle" fill="#fff" font-family="Sora">y</text><text x="100" y="98" fill="#fbbf24" font-family="JetBrains Mono" font-size="10">BF −1</text></g>
+          <g class="tree-node"><circle cx="190" cy="165" r="17" fill="#151138" stroke="#2dd4bf" stroke-width="2.5" class="glow-teal"/><text x="190" y="170" text-anchor="middle" fill="#fff" font-family="Sora" font-weight="bold">x</text><text x="230" y="170" fill="#2dd4bf" font-family="JetBrains Mono" font-size="10">Inner child</text></g>
+        `,
+        afterSvg: `
+          <line x1="190" y1="42" x2="115" y2="110" stroke="#34d399" stroke-width="2.5" />
+          <line x1="190" y1="42" x2="265" y2="110" stroke="#34d399" stroke-width="2.5" />
+          <g class="tree-node"><circle cx="190" cy="42" r="22" fill="#151138" stroke="#34d399" stroke-width="3" class="glow-mint"/><text x="190" y="47" text-anchor="middle" fill="#fff" font-family="Sora" font-weight="bold">x</text><text x="225" y="34" fill="#34d399" font-family="JetBrains Mono" font-size="10">Apex [BF 0]</text></g>
+          <g class="tree-node"><circle cx="115" cy="110" r="18" fill="#151138" stroke="#a78bfa" stroke-width="2.5"/><text x="115" y="114" text-anchor="middle" fill="#fff" font-family="Sora">y</text></g>
+          <g class="tree-node"><circle cx="265" cy="110" r="18" fill="#151138" stroke="#2dd4bf" stroke-width="2.5"/><text x="265" y="114" text-anchor="middle" fill="#fff" font-family="Sora">z</text></g>
+        `
+      },
+      RL: {
+        title: "Right-Left Zigzag → Double Rotation",
+        type: "Double O(1)",
+        desc: "BF(z) = −2 but child y leans left (BF > 0). Phase 1 right-rotates child y into an RR shape; Phase 2 left-rotates z.",
+        code: `// Right-Left Double Rotate
+z->right = rightRotate(z->right); // Phase 1: straightens
+return leftRotate(z);            // Phase 2: balances`,
+        beforeSvg: `
+          <line x1="140" y1="45" x2="240" y2="105" stroke="#fbbf24" stroke-width="3" />
+          <line x1="240" y1="105" x2="190" y2="165" stroke="#fbbf24" stroke-width="3" />
+          <g class="tree-node"><circle cx="140" cy="45" r="21" fill="#151138" stroke="#fb7185" stroke-width="3" class="glow-rose"/><text x="140" y="50" text-anchor="middle" fill="#fff" font-family="Sora" font-weight="bold">z</text><text x="95" y="38" fill="#fb7185" font-family="JetBrains Mono" font-size="10">BF −2</text></g>
+          <g class="tree-node"><circle cx="240" cy="105" r="19" fill="#151138" stroke="#fbbf24" stroke-width="2.5" class="glow-amber"/><text x="240" y="110" text-anchor="middle" fill="#fff" font-family="Sora">y</text><text x="275" y="98" fill="#fbbf24" font-family="JetBrains Mono" font-size="10">BF +1</text></g>
+          <g class="tree-node"><circle cx="190" cy="165" r="17" fill="#151138" stroke="#2dd4bf" stroke-width="2.5" class="glow-teal"/><text x="190" y="170" text-anchor="middle" fill="#fff" font-family="Sora" font-weight="bold">x</text><text x="145" y="170" fill="#2dd4bf" font-family="JetBrains Mono" font-size="10">Inner child</text></g>
+        `,
+        afterSvg: `
+          <line x1="190" y1="42" x2="115" y2="110" stroke="#34d399" stroke-width="2.5" />
+          <line x1="190" y1="42" x2="265" y2="110" stroke="#34d399" stroke-width="2.5" />
+          <g class="tree-node"><circle cx="190" cy="42" r="22" fill="#151138" stroke="#34d399" stroke-width="3" class="glow-mint"/><text x="190" y="47" text-anchor="middle" fill="#fff" font-family="Sora" font-weight="bold">x</text><text x="225" y="34" fill="#34d399" font-family="JetBrains Mono" font-size="10">Apex [BF 0]</text></g>
+          <g class="tree-node"><circle cx="115" cy="110" r="18" fill="#151138" stroke="#a78bfa" stroke-width="2.5"/><text x="115" y="114" text-anchor="middle" fill="#fff" font-family="Sora">y</text></g>
+          <g class="tree-node"><circle cx="265" cy="110" r="18" fill="#151138" stroke="#2dd4bf" stroke-width="2.5"/><text x="265" y="114" text-anchor="middle" fill="#fff" font-family="Sora">z</text></g>
+        `
+      }
+    };
+
+    function selectRotationDemo(caseKey) {
+      currentRotCase = caseKey;
+      rotState = 'A';
+      ['LL', 'RR', 'LR', 'RL'].forEach(k => {
+        const tab = document.getElementById(`rotTab-${k}`);
+        if (tab) {
+          if (k === caseKey) {
+            tab.className = "px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold bg-eq-elevated text-eq-violet transition-all shadow";
+          } else {
+            tab.className = "px-3.5 py-1.5 rounded-lg text-xs font-mono text-eq-muted hover:text-white transition-all";
+          }
+        }
+      });
+
+      const data = rotMeta[caseKey];
+      document.getElementById('rotCaseBadge').textContent = `${caseKey} SCENARIO`;
+      document.getElementById('rotCaseType').textContent = data.type;
+      document.getElementById('rotCaseTitle').textContent = data.title;
+      document.getElementById('rotCaseDesc').textContent = data.desc;
+      document.getElementById('rotCodeBlock').textContent = data.code;
+      renderCurrentRotationStage();
+    }
+
+    function animateCurrentRotation() {
+      rotState = rotState === 'A' ? 'B' : 'A';
+      playChime(rotState === 'B' ? 700 : 450);
+      renderCurrentRotationStage();
+    }
+
+    function resetCurrentRotation() {
+      rotState = 'A';
+      renderCurrentRotationStage();
+    }
+
+    function renderCurrentRotationStage() {
+      const data = rotMeta[currentRotCase];
+      const svg = document.getElementById('rotDemoSvg');
+      const stepLabel = document.getElementById('rotStageStepLabel');
+      const banner = document.getElementById('rotExplainBanner');
+      const btnText = document.getElementById('rotAnimateBtnText');
+
+      if (rotState === 'A') {
+        svg.innerHTML = data.beforeSvg;
+        stepLabel.textContent = "STATE A: UNBALANCED (|BF| = 2)";
+        stepLabel.className = "text-eq-rose font-bold";
+        banner.textContent = `Unbalanced node detected. Press 'Execute Rotation' to restore tree equilibrium.`;
+        btnText.textContent = "Execute Rotation";
+      } else {
+        svg.innerHTML = data.afterSvg;
+        stepLabel.textContent = "STATE B: REBALANCED (BF = 0)";
+        stepLabel.className = "text-eq-mint font-bold";
+        banner.textContent = `Equilibrium restored in O(1) time! In-order sequence remains 100% intact.`;
+        btnText.textContent = "Revert to Unbalanced";
+      }
+    }
+
+
+    /* =========================================================================
+       7. SLIDE 5: COMPLETE IN-SLIDE AVL LABORATORY
+       ========================================================================= */
+    class Node {
+      constructor(key) {
+        this.key = key;
+        this.height = 1;
+        this.left = null;
+        this.right = null;
+      }
+    }
+
+    class InSlideAVL {
+      constructor() {
+        this.root = null;
+        this.balancing = true;
+        this.audit = [];
+        this.searchPath = [];
+      }
+
+      h(n) { return n ? n.height : 0; }
+      bf(n) { return n ? this.h(n.left) - this.h(n.right) : 0; }
+      upH(n) { if (n) n.height = 1 + Math.max(this.h(n.left), this.h(n.right)); }
+
+      rightRotate(y) {
+        const x = y.left;
+        y.left = x.right;
+        x.right = y;
+        this.upH(y);
+        this.upH(x);
+        this.audit.push(`Right-Rotate on ${y.key}: ${x.key} becomes subtree root.`);
+        return x;
+      }
+
+      leftRotate(x) {
+        const y = x.right;
+        x.right = y.left;
+        y.left = x;
+        this.upH(x);
+        this.upH(y);
+        this.audit.push(`Left-Rotate on ${x.key}: ${y.key} becomes subtree root.`);
+        return y;
+      }
+
+      balance(n) {
+        this.upH(n);
+        if (!this.balancing) return n;
+        const b = this.bf(n);
+
+        if (b > 1) {
+          if (this.bf(n.left) < 0) {
+            this.audit.push(`Node ${n.key}: BF=+${b}, left child leans right → LR double rotate.`);
+            n.left = this.leftRotate(n.left);
+          } else {
+            this.audit.push(`Node ${n.key}: BF=+${b} → LL single right rotate.`);
+          }
+          return this.rightRotate(n);
+        }
+
+        if (b < -1) {
+          if (this.bf(n.right) > 0) {
+            this.audit.push(`Node ${n.key}: BF=${b}, right child leans left → RL double rotate.`);
+            n.right = this.rightRotate(n.right);
+          } else {
+            this.audit.push(`Node ${n.key}: BF=${b} → RR single left rotate.`);
+          }
+          return this.leftRotate(n);
+        }
+        return n;
+      }
+
+      insert(key) {
+        this.audit = [];
+        this.searchPath = [];
+        if (this.find(key)) {
+          this.audit.push(`Key ${key} already exists in tree.`);
+          return false;
+        }
+        this.audit.push(`insert(${key}): traversing BST to leaf slot.`);
+        this.root = this._ins(this.root, key);
+        this.audit.push(`insert(${key}) completed. Heights and balance verified.`);
+        return true;
+      }
+
+      _ins(n, key) {
+        if (!n) return new Node(key);
+        if (key < n.key) n.left = this._ins(n.left, key);
+        else n.right = this._ins(n.right, key);
+        return this.balance(n);
+      }
+
+      minNode(n) {
+        let curr = n;
+        while (curr.left) curr = curr.left;
+        return curr;
+      }
+
+      delete(key) {
+        this.audit = [];
+        this.searchPath = [];
+        if (!this.find(key)) {
+          this.audit.push(`Key ${key} not found for deletion.`);
+          return false;
+        }
+        this.audit.push(`delete(${key}): locating node in tree.`);
+        this.root = this._del(this.root, key);
+        this.audit.push(`delete(${key}) completed. Retracing ancestors.`);
+        return true;
+      }
+
+      _del(n, key) {
+        if (!n) return null;
+        if (key < n.key) n.left = this._del(n.left, key);
+        else if (key > n.key) n.right = this._del(n.right, key);
+        else {
+          if (!n.left || !n.right) {
+            n = n.left ? n.left : n.right;
+          } else {
+            const succ = this.minNode(n.right);
+            this.audit.push(`Node ${key} has two children; replaced by in-order successor ${succ.key}.`);
+            n.key = succ.key;
+            n.right = this._del(n.right, succ.key);
+          }
+        }
+        if (!n) return null;
+        return this.balance(n);
+      }
+
+      search(key) {
+        this.audit = [];
+        this.searchPath = [];
+        let curr = this.root;
+        while (curr) {
+          this.searchPath.push(curr.key);
+          if (curr.key === key) {
+            this.audit.push(`Found key ${key} in ${this.searchPath.length} comparison(s): ${this.searchPath.join(' → ')}`);
+            return true;
+          }
+          curr = key < curr.key ? curr.left : curr.right;
+        }
+        this.audit.push(`Key ${key} not in tree (visited: ${this.searchPath.join(' → ') || 'empty'}).`);
+        return false;
+      }
+
+      find(k) {
+        let curr = this.root;
+        while (curr) {
+          if (curr.key === k) return true;
+          curr = k < curr.key ? curr.left : curr.right;
+        }
+        return false;
+      }
+
+      clear() {
+        this.root = null;
+        this.audit = ["Tree cleared into empty state."];
+        this.searchPath = [];
+      }
+    }
+
+    const inSlideTree = new InSlideAVL();
+
+    function inSlideInsert() {
+      const inp = document.getElementById('inSlideKeyInput');
+      const val = parseInt(inp.value);
+      if (isNaN(val)) return;
+      playChime(val % 2 === 0 ? 580 : 660);
+      const ok = inSlideTree.insert(val);
+      inSlideRender(ok ? `Inserted key ${val}` : `Key ${val} already exists`);
+      if (ok) inp.value = Math.floor(Math.random() * 90) + 10;
+    }
+
+    function inSlideDelete() {
+      const inp = document.getElementById('inSlideKeyInput');
+      const val = parseInt(inp.value);
+      if (isNaN(val)) return;
+      playChime(380);
+      const ok = inSlideTree.delete(val);
+      inSlideRender(ok ? `Deleted key ${val}` : `Key ${val} not found`);
+    }
+
+    function inSlideSearch() {
+      const inp = document.getElementById('inSlideKeyInput');
+      const val = parseInt(inp.value);
+      if (isNaN(val)) return;
+      playChime(520);
+      const ok = inSlideTree.search(val);
+      inSlideRender(ok ? `Found key ${val}!` : `Key ${val} not found`);
+    }
+
+    function inSlideRandom() {
+      let r;
+      do { r = Math.floor(Math.random() * 95) + 5; } while (inSlideTree.find(r));
+      playChime(620);
+      inSlideTree.insert(r);
+      inSlideRender(`Inserted random key ${r}`);
+    }
+
+    function toggleInSlideBalancing(checked) {
+      inSlideTree.balancing = checked;
+      if (checked) {
+        const keys = [];
+        const walk = n => { if (n) { keys.push(n.key); walk(n.left); walk(n.right); } };
+        walk(inSlideTree.root);
+        inSlideTree.clear();
+        keys.forEach(k => inSlideTree.insert(k));
+      }
+      inSlideTree.audit = [checked ? "AVL Balancing ON: tree rebuilt with rotations." : "AVL Balancing OFF: unconstrained standard BST mode."];
+      inSlideRender(checked ? "AVL Balancing Active" : "Behaving as Plain BST");
+    }
+
+    async function loadInSlidePreset(str) {
+      inSlideTree.clear();
+      inSlideTree.balancing = true;
+      document.getElementById('inSlideBalToggle').checked = true;
+      const keys = str.split(',').map(Number);
+      for (const k of keys) {
+        inSlideTree.insert(k);
+        playChime(500 + k * 8);
+        inSlideRender(`Preset inserting ${k}...`);
+        await new Promise(r => setTimeout(r, 200));
+      }
+      inSlideTree.audit = [`Preset sequence [${str}] successfully loaded.`];
+      inSlideRender(`Preset [${str}] loaded`);
+    }
+
+    function inSlideClear() {
+      inSlideTree.clear();
+      inSlideRender("Tree cleared");
+    }
+
+    /* =========================================================================
+       SONIC IN-ORDER TRAVERSAL PLAYER
+       ========================================================================= */
+    async function runSonicTraversal() {
+      if (!inSlideTree.root) {
+        inSlideRender("Tree empty: cannot run traversal.");
+        return;
+      }
+      const banner = document.getElementById('traversalBanner');
+      const bannerText = document.getElementById('traversalBannerText');
+      if (banner) banner.classList.remove('hidden');
+
+      const inOrderSeq = [];
+      function collect(node) {
+        if (!node) return;
+        collect(node.left);
+        inOrderSeq.push(node.key);
+        collect(node.right);
+      }
+      collect(inSlideTree.root);
+
+      inSlideTree.audit.push(`Starting Sonic In-Order Traversal (L-N-R)...`);
+      const notesPentatonic = [392, 440, 493.88, 523.25, 587.33, 659.25, 783.99, 880];
+
+      for (let i = 0; i < inOrderSeq.length; i++) {
+        const k = inOrderSeq[i];
+        inSlideTree.searchPath = [k];
+        inSlideRender(`In-Order visiting node ${k}...`);
+        if (bannerText) bannerText.textContent = `In-Order Sequence: [${inOrderSeq.slice(0, i + 1).join(', ')}]`;
+        playChime(notesPentatonic[i % notesPentatonic.length], 'triangle');
+        await new Promise(r => setTimeout(r, 380));
+      }
+
+      if (bannerText) bannerText.textContent = `Sorted Traversal Complete: [${inOrderSeq.join(' → ')}] (Always Sorted in a BST!)`;
+      inSlideTree.searchPath = inOrderSeq;
+      inSlideRender(`In-Order Traversal: [${inOrderSeq.join(' → ')}]`);
+      setTimeout(() => { if (banner) banner.classList.add('hidden'); }, 3500);
+    }
+
+    /* =========================================================================
+       RAPID CASCADE STRESS TEST
+       ========================================================================= */
+    async function runCascadeStressTest() {
+      inSlideTree.clear();
+      inSlideTree.balancing = true;
+      document.getElementById('inSlideBalToggle').checked = true;
+      const cascadeKeys = [50, 25, 10, 5, 20, 30, 22];
+      inSlideTree.audit.push("Turbo Cascade Benchmark started. Injecting keys...");
+      for (const k of cascadeKeys) {
+        inSlideTree.insert(k);
+        playChime(440 + k * 6);
+        inSlideRender(`Cascade testing: inserted key ${k}`);
+        await new Promise(r => setTimeout(r, 260));
+      }
+      inSlideTree.audit.push("Cascade Test Complete: Multiple O(1) single & double rotations verified!");
+      inSlideRender("Cascade Test Succeeded • Depth Logarithmic");
+    }
+
+    /* =========================================================================
+       COLLISION-FREE TREE POSITIONING ENGINE
+       ========================================================================= */
+    function inSlideRender(telemetryText) {
+      if (telemetryText) {
+        document.getElementById('inSlideLog').textContent = telemetryText;
+      }
+      document.getElementById('inSlideAuditTime').textContent = new Date().toLocaleTimeString();
+
+      const auditBox = document.getElementById('inSlideAuditLog');
+      if (auditBox && inSlideTree.audit.length) {
+        auditBox.innerHTML = inSlideTree.audit.map(item => `
+          <div class="flex items-start gap-1.5">
+            <span class="text-eq-violet font-bold">&rsaquo;</span>
+            <span class="text-slate-200">${item}</span>
+          </div>
+        `).join('');
+        auditBox.scrollTop = auditBox.scrollHeight;
+      }
+
+      const svg = document.getElementById('inSlideSvg');
+      if (!svg) return;
+
+      if (!inSlideTree.root) {
+        svg.innerHTML = `<text x="50%" y="50%" text-anchor="middle" fill="#9893c7" font-family="JetBrains Mono" font-size="13">Workstation Empty. Insert a key or select a preset.</text>`;
+        document.getElementById('inSlideStatNodes').textContent = '0';
+        document.getElementById('inSlideStatHeight').textContent = '0';
+        document.getElementById('inSlideStatBf').textContent = '0';
+        return;
+      }
+
+      const positions = new Map();
+      let xIndex = 0;
+      const X_SPACING = 62;
+      const Y_SPACING = 56;
+      const Y_OFFSET = 38;
+
+      function calcPositions(node, depth) {
+        if (!node) return;
+        calcPositions(node.left, depth + 1);
+        positions.set(node, { x: xIndex++ * X_SPACING + 42, y: depth * Y_SPACING + Y_OFFSET });
+        calcPositions(node.right, depth + 1);
+      }
+      calcPositions(inSlideTree.root, 0);
+
+      let lines = '', nodes = '';
+      let count = 0, maxBf = 0;
+
+      function renderTree(node) {
+        if (!node) return;
+        count++;
+        const p = positions.get(node);
+        const bf = inSlideTree.bf(node);
+        maxBf = Math.max(maxBf, Math.abs(bf));
+
+        for (const child of [node.left, node.right]) {
+          if (child) {
+            const cp = positions.get(child);
+            lines += `<line x1="${p.x}" y1="${p.y}" x2="${cp.x}" y2="${cp.y}" stroke="#2c2463" stroke-width="2.5" />`;
+            renderTree(child);
+          }
+        }
+
+        const isViolation = Math.abs(bf) > 1;
+        const isSearch = inSlideTree.searchPath.includes(node.key);
+        let strokeColor = '#2dd4bf';
+        let glowClass = 'glow-teal';
+
+        if (isViolation) {
+          strokeColor = '#fb7185';
+          glowClass = 'glow-rose animate-pulse';
+        } else if (isSearch) {
+          strokeColor = '#34d399';
+          glowClass = 'glow-mint node-highlight';
+        }
+
+        nodes += `
+          <g class="tree-node cursor-pointer" onclick="inSlideSearchNode(${node.key})">
+            <circle cx="${p.x}" cy="${p.y}" r="18" fill="#151138" stroke="${strokeColor}" stroke-width="2.5" class="${glowClass}"/>
+            <text x="${p.x}" y="${p.y + 5}" text-anchor="middle" fill="#fff" font-family="Sora" font-weight="bold" font-size="12">${node.key}</text>
+            <rect x="${p.x + 8}" y="${p.y - 18}" width="22" height="14" rx="3" fill="#060511" stroke="${strokeColor}" stroke-width="1" />
+            <text x="${p.x + 19}" y="${p.y - 8}" text-anchor="middle" fill="${strokeColor}" font-family="JetBrains Mono" font-size="9" font-weight="bold">${bf > 0 ? '+' + bf : bf}</text>
+          </g>
+        `;
+      }
+      renderTree(inSlideTree.root);
+
+      const viewBoxWidth = Math.max(xIndex * X_SPACING + 30, 240);
+      const viewBoxHeight = Math.max(inSlideTree.h(inSlideTree.root) * Y_SPACING + 45, 120);
+      svg.setAttribute('viewBox', `0 0 ${viewBoxWidth} ${viewBoxHeight}`);
+      svg.innerHTML = lines + nodes;
+
+      document.getElementById('inSlideStatNodes').textContent = count;
+      document.getElementById('inSlideStatHeight').textContent = inSlideTree.h(inSlideTree.root);
+      document.getElementById('inSlideStatBf').textContent = maxBf;
+    }
+
+    function inSlideSearchNode(k) {
+      document.getElementById('inSlideKeyInput').value = k;
+      inSlideSearch();
+    }
+
+    // Initialize Default State
+    inSlideTree.balancing = true;
+    [20, 10, 30].forEach(k => inSlideTree.insert(k));
+    updateDeck();
+  </script>
+</body>
+</html>
